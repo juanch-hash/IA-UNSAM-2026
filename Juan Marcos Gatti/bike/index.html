@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Mountain Bike Rush — Ultimate Edition</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #071018;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#gameContainer {
+    position: relative;
+    width: min(1180px, 100vw);
+    height: min(650px, 100vh);
+    overflow: hidden;
+    background: #000;
+    box-shadow:
+        0 30px 90px rgba(0, 0, 0, 0.65),
+        0 0 0 1px rgba(255,255,255,0.08);
+}
+
+canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+#hud {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    right: 14px;
+
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+
+    pointer-events: none;
+    z-index: 10;
+}
+
+.hudCard {
+    min-width: 105px;
+
+    padding: 8px 12px;
+
+    border:
+        1px solid rgba(255,255,255,0.16);
+
+    border-radius: 12px;
+
+    background:
+        rgba(4, 15, 24, 0.72);
+
+    backdrop-filter: blur(8px);
+
+    color: white;
+
+    box-shadow:
+        0 7px 20px rgba(0,0,0,0.22);
+}
+
+.hudLabel {
+    display: block;
+
+    color: #aabac5;
+
+    font-size: 10px;
+    font-weight: bold;
+
+    letter-spacing: 1.2px;
+
+    text-transform: uppercase;
+}
+
+.hudValue {
+    display: block;
+
+    margin-top: 2px;
+
+    color: white;
+
+    font-size: 18px;
+    font-weight: 900;
+}
+
+#progressPanel {
+    position: absolute;
+
+    top: 14px;
+    left: 50%;
+
+    transform: translateX(-50%);
+
+    width: 330px;
+
+    padding: 9px 12px;
+
+    border:
+        1px solid rgba(255,255,255,0.16);
+
+    border-radius: 12px;
+
+    background:
+        rgba(4, 15, 24, 0.72);
+
+    backdrop-filter: blur(8px);
+
+    color: white;
+
+    z-index: 10;
+}
+
+.progressHeader {
+    display: flex;
+    justify-content: space-between;
+
+    font-size: 10px;
+    font-weight: 900;
+
+    letter-spacing: 1px;
+
+    color: #c7d3da;
+}
+
+#progressTrack {
+    width: 100%;
+    height: 8px;
+
+    margin-top: 6px;
+
+    overflow: hidden;
+
+    border-radius: 20px;
+
+    background: rgba(255,255,255,0.13);
+}
+
+#progressBar {
+    width: 0%;
+    height: 100%;
+
+    border-radius: 20px;
+
+    background:
+        linear-gradient(
+            90deg,
+            #ffdf54,
+            #ffae42,
+            #6af29b
+        );
+
+    transition: width 0.1s linear;
+}
+
+#gameMessage {
+    position: absolute;
+
+    top: 96px;
+    left: 50%;
+
+    transform: translateX(-50%);
+
+    color: white;
+
+    font-size: 21px;
+    font-weight: 900;
+
+    letter-spacing: 1px;
+
+    text-shadow:
+        0 3px 12px rgba(0,0,0,0.9);
+
+    pointer-events: none;
+
+    opacity: 0;
+
+    z-index: 20;
+}
+
+#controlsHint {
+    position: absolute;
+
+    right: 15px;
+    bottom: 13px;
+
+    color: rgba(255,255,255,0.7);
+
+    font-size: 11px;
+
+    pointer-events: none;
+
+    z-index: 10;
+}
+
+#overlay {
+    position: absolute;
+
+    inset: 0;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 30px;
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(3,12,20,0.78),
+            rgba(3,10,18,0.94)
+        );
+
+    z-index: 50;
+}
+
+.menuPanel {
+    width: min(720px, 94%);
+
+    padding: 34px;
+
+    border:
+        1px solid rgba(255,255,255,0.15);
+
+    border-radius: 25px;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(19,40,55,0.97),
+            rgba(5,15,24,0.98)
+        );
+
+    color: white;
+
+    text-align: center;
+
+    box-shadow:
+        0 35px 100px rgba(0,0,0,0.65);
+}
+
+.menuTitle {
+    margin: 0;
+
+    font-size: 48px;
+    font-weight: 1000;
+
+    letter-spacing: 3px;
+
+    text-transform: uppercase;
+
+    text-shadow:
+        0 7px 25px rgba(0,0,0,0.8);
+}
+
+.menuSubtitle {
+    margin-top: 7px;
+
+    color: #9fe7ff;
+
+    font-size: 13px;
+    font-weight: 900;
+
+    letter-spacing: 5px;
+}
+
+.menuDescription {
+    margin: 22px auto;
+
+    max-width: 520px;
+
+    color: #b7c6cf;
+
+    line-height: 1.6;
+}
+
+.menuButtons {
+    display: flex;
+
+    justify-content: center;
+    flex-wrap: wrap;
+
+    gap: 8px;
+}
+
+button {
+    padding: 13px 20px;
+
+    border: none;
+    border-radius: 12px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #ffe15b,
+            #ff9f38
+        );
+
+    color: #17200f;
+
+    font-weight: 900;
+
+    cursor: pointer;
+
+    box-shadow:
+        0 8px 20px rgba(0,0,0,0.3);
+
+    transition:
+        transform 0.15s ease,
+        filter 0.15s ease;
+}
+
+button:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.08);
+}
+
+button.secondary {
+    color: white;
+
+    background:
+        rgba(255,255,255,0.08);
+
+    border:
+        1px solid rgba(255,255,255,0.15);
+}
+
+button:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    transform: none;
+}
+
+#levelSelector {
+    display: none;
+
+    grid-template-columns:
+        repeat(5, 1fr);
+
+    gap: 10px;
+
+    margin-top: 20px;
+}
+
+.levelButton {
+    padding: 13px 7px;
+
+    background:
+        rgba(255,255,255,0.07);
+
+    border:
+        1px solid rgba(255,255,255,0.12);
+
+    color: white;
+}
+
+.levelButton strong {
+    display: block;
+
+    font-size: 14px;
+}
+
+.levelButton small {
+    display: block;
+
+    margin-top: 5px;
+
+    color: #9eafb9;
+
+    font-size: 10px;
+}
+
+.controlsBox {
+    margin-top: 23px;
+
+    padding-top: 18px;
+
+    border-top:
+        1px solid rgba(255,255,255,0.09);
+
+    color: #9eabb4;
+
+    font-size: 13px;
+
+    line-height: 1.7;
+}
+
+.controlsBox b {
+    color: white;
+}
+
+code {
+    color: #ffe16a;
+}
+
+@media (max-width: 850px) {
+
+    .hudCard {
+        min-width: 70px;
+        padding: 6px 8px;
+    }
+
+    .hudValue {
+        font-size: 13px;
+    }
+
+    #progressPanel {
+        width: 220px;
+    }
+
+    .menuTitle {
+        font-size: 34px;
+    }
+
+    #levelSelector {
+        grid-template-columns:
+            repeat(2, 1fr);
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div id="gameContainer">
+
+    <canvas
+        id="gameCanvas"
+        width="1180"
+        height="650">
+    </canvas>
+
+    <div id="hud">
+
+        <div class="hudCard">
+            <span class="hudLabel">Nivel</span>
+            <span class="hudValue" id="hudLevel">1</span>
+        </div>
+
+        <div class="hudCard">
+            <span class="hudLabel">Puntos</span>
+            <span class="hudValue" id="hudScore">0</span>
+        </div>
+
+        <div class="hudCard">
+            <span class="hudLabel">Monedas</span>
+            <span class="hudValue" id="hudCoins">0</span>
+        </div>
+
+        <div class="hudCard">
+            <span class="hudLabel">Velocidad</span>
+            <span class="hudValue" id="hudSpeed">0</span>
+        </div>
+
+        <div class="hudCard">
+            <span class="hudLabel">Vidas</span>
+            <span class="hudValue" id="hudLives">3</span>
+        </div>
+
+    </div>
+
+    <div id="progressPanel">
+
+        <div class="progressHeader">
+
+            <span>PROGRESO</span>
+
+            <span id="hudProgress">
+                0%
+            </span>
+
+        </div>
+
+        <div id="progressTrack">
+            <div id="progressBar"></div>
+        </div>
+
+    </div>
+
+    <div id="gameMessage"></div>
+
+    <div id="controlsHint">
+        W / ↑ acelerar · S / ↓ frenar · ESPACIO saltar · P pausar · R reiniciar
+    </div>
+
+    <div id="overlay">
+
+        <div class="menuPanel">
+
+            <h1 class="menuTitle">
+                Mountain Bike Rush
+            </h1>
+
+            <div class="menuSubtitle">
+                ULTIMATE EDITION
+            </div>
+
+            <p class="menuDescription">
+                Atravesá cinco escenarios extremos,
+                juntá monedas, superá obstáculos,
+                alcanzá los checkpoints y conquistá
+                la cumbre final.
+            </p>
+
+            <div class="menuButtons">
+
+                <button id="playButton">
+                    JUGAR
+                </button>
+
+                <button
+                    id="levelsButton"
+                    class="secondary">
+                    SELECCIONAR NIVEL
+                </button>
+
+            </div>
+
+            <div id="levelSelector"></div>
+
+            <div class="controlsBox">
+
+                <b>Controles</b><br>
+
+                W / ↑ — acelerar<br>
+                S / ↓ — frenar<br>
+                ESPACIO — saltar<br>
+                P — pausa<br>
+                R — reiniciar / continuar<br><br>
+
+                API para agentes:
+                <code>step()</code> ·
+                <code>getState()</code> ·
+                <code>getAvailableActions()</code>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script src="game.js"></script>
+<script src="ui.js"></script>
+
+</body>
+</html>
